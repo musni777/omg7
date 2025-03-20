@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Chat</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; }
+        #chat { display: none; }
+    </style>
+</head>
+<body>
+    <h2>Random Chat</h2>
+    <div id="status">Waiting for a partner...</div>
+    <div id="chat">
+        <div id="messages"></div>
+        <input type="text" id="messageInput" placeholder="Type a message..." />
+        <button onclick="sendMessage()">Send</button>
+    </div>
+
+    <script>
+        const socket = io("http://localhost:3000");
+
+        socket.on("paired", () => {
+            document.getElementById("status").innerText = "Connected!";
+            document.getElementById("chat").style.display = "block";
+        });
+
+        socket.on("message", (msg) => {
+            const msgDiv = document.createElement("div");
+            msgDiv.innerText = "Stranger: " + msg;
+            document.getElementById("messages").appendChild(msgDiv);
+        });
+
+        socket.on("partnerDisconnected", () => {
+            document.getElementById("status").innerText = "Partner left, finding new one...";
+            document.getElementById("chat").style.display = "none";
+        });
+
+        function sendMessage() {
+            const input = document.getElementById("messageInput");
+            if (input.value.trim()) {
+                const msgDiv = document.createElement("div");
+                msgDiv.innerText = "You: " + input.value;
+                document.getElementById("messages").appendChild(msgDiv);
+
+                socket.emit("message", input.value);
+                input.value = "";
+            }
+        }
+    </script>
+</body>
+</html>
